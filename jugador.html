@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Pruebas API Artículo</title>
+    <title>Pruebas API Jugador</title>
     <style>
       :root {
         --bg: #f7f9fc;
@@ -99,9 +99,9 @@
   <body>
     <div class="wrap">
       <header>
-        <h1>Pruebas de la API: /articulo</h1>
+        <h1>Pruebas de la API: /jugador</h1>
         <div class="muted">
-          Este fichero realiza llamadas a los endpoints de Artículo y muestra
+          Este fichero realiza llamadas a los endpoints de Jugador y muestra
           comprobaciones básicas.
         </div>
       </header>
@@ -169,37 +169,26 @@
         <div class="card">
           <label>Create → Update (no FK) → Delete</label>
           <div class="muted">
-            Crea un artículo (usa idTipoarticulo=1 e idClub=1 por defecto), lo
+            Crea un jugador (usa idUsuario=1 por defecto), lo
             actualiza (campos no FK) y luego lo borra.
           </div>
-          <div style="margin-top: 8px">
-            <label for="createDescripcion">Descripción</label>
+          <div style="margin-top: 8px" class="row">
             <input
-              id="createDescripcion"
-              placeholder="Descripción inicial"
+              id="createPosicion"
+              placeholder="Posición inicial"
               value="Prueba API"
             />
           </div>
-          <div style="margin-top: 8px">
-            <label for="createPrecio">Precio</label>
-            <input id="createPrecio" type="number" step="0.01" value="10.00" />
-          </div>
-          <div style="margin-top: 8px">
-            <label for="createDescuento">Descuento</label>
+          <div style="margin-top: 8px" class="row">
+            <input id="createDorsal" type="number" min="1" max="99" step="1" value="10" />
             <input
-              id="createDescuento"
-              type="number"
-              step="0.01"
-              value="0.00"
+              id="createCapitan"
+              type="checkbox"
             />
+            <label for="createCapitan">es capitan</label>
           </div>
-          <div style="margin-top: 8px">
-            <label for="createIdTipo">idTipoarticulo</label>
-            <input id="createIdTipo" type="number" value="1" />
-          </div>
-          <div style="margin-top: 8px">
-            <label for="createIdClub">idClub</label>
-            <input id="createIdClub" type="number" value="1" />
+          <div style="margin-top: 8px" class="row">
+            <input id="createIdUsuario" type="number" value="1" />
           </div>
           <div style="margin-top: 8px">
             <button id="btnCreateUpdateDelete">
@@ -216,15 +205,15 @@
 
       <p class="muted" style="margin-top: 12px">
         Notas: Asume que el backend está disponible en la misma origen bajo
-        <code>/articulo</code>. Para <strong>create</strong> uso
-        idTipoarticulo=1 e idClub=1 por defecto — si esos FK no existen, la
+        <code>/jugador</code>. Para <strong>create</strong> uso
+        idUsuario=1 por defecto — si esos FK no existen, la
         creación fallará.
       </p>
     </div>
 
     <script>
-      //const baseUrl = window.location.origin + "/articulo";
-      const baseUrl = "http://localhost:8089/articulo";
+      //const baseUrl = window.location.origin + "/jugador";
+      const baseUrl = "http://localhost:8089/jugador";
       const logEl = document.getElementById("log");
       function log(...args) {
         const t = args
@@ -259,7 +248,7 @@
         .addEventListener("click", async () => {
           log("Iniciando fill/20...");
           try {
-            const filled = await api("/fill/20", { method: "GET" });
+            const filled = await api("/rellena/20", { method: "GET" });
             log("fill/20 response:", filled);
             const count = await api("/count", { method: "GET" });
             log("count after fill/20:", count);
@@ -292,7 +281,7 @@
         .addEventListener("click", async () => {
           log("Iniciando fill/100...");
           try {
-            const filled = await api("/fill/100", { method: "GET" });
+            const filled = await api("/rellena/100", { method: "GET" });
             log("fill/100 response:", filled);
             const count = await api("/count", { method: "GET" });
             log("count after fill/100:", count);
@@ -307,7 +296,7 @@
           log("Introduce un id válido");
           return;
         }
-        log("GET /articulo/" + id);
+        log("GET /jugador/" + id);
         try {
           const data = await api("/" + id, { method: "GET" });
           log("GET result:", data);
@@ -367,30 +356,20 @@
         .addEventListener("click", async () => {
           try {
             // Crear
-            const descripcion =
-              document.getElementById("createDescripcion").value ||
-              "Prueba API";
-            const precio =
-              Number(document.getElementById("createPrecio").value) || 0;
-            const descuento =
-              Number(document.getElementById("createDescuento").value) || 0;
-            const idTipoarticulo =
-              Number(document.getElementById("createIdTipo").value) || 1;
-            const idClub =
-              Number(document.getElementById("createIdClub").value) || 1;
+            const posicion = document.getElementById("createPosicion").value || "Prueba API";
+            const dorsal = Number(document.getElementById("createDorsal").value) || 1;
+            const capitan = document.getElementById("createCapitan").checked;
+            const idUsuario = Number(document.getElementById("createIdUsuario").value) || 1;
             log(
-              "Iniciando CREATE con idTipoarticulo=" +
-                idTipoarticulo +
-                " idClub=" +
-                idClub
+              "Iniciando CREATE con idUsuario=" +
+                idUsuario
             );
             const createPayload = {
-              descripcion,
-              precio,
-              descuento,
+              dorsal,
+              posicion,
+              capitan,
               imagen: null,
-              idTipoarticulo,
-              idClub,
+              idUsuario,
             };
             const created = await api("", {
               method: "POST",
@@ -406,10 +385,10 @@
 
             // Update: cambiar campos no FK
             const updatedPayload = Object.assign({}, created, {
-              descripcion: descripcion + " - UPDATED",
-              precio: (Number(precio) + 1).toFixed(2),
-              descuento: Number(descuento) + 0.5,
-              imagen: null,
+              posicion: posicion + " - UPDATED",
+              dorsal: Number(dorsal) + 1,
+              idUsuario: Number(idUsuario) + 1,
+              
             });
             log("Executing UPDATE for id=" + newId);
             const updated = await api("", {
@@ -422,23 +401,23 @@
             const after = await api("/" + newId, { method: "GET" });
             log("GET after update:", after);
             let okUpdate = true;
-            if (after.descripcion !== updatedPayload.descripcion) {
+            if (after.posicion !== updatedPayload.posicion) {
               okUpdate = false;
-              log("FALLO: descripcion no actualizada");
+              log("FALLO: posicion no actualizada");
             }
-            if (Number(after.precio) !== Number(updatedPayload.precio)) {
+            if (Number(after.dorsal) !== Number(updatedPayload.dorsal)) {
               okUpdate = false;
               log(
-                "FALLO: precio no actualizado (esperado " +
-                  updatedPayload.precio +
+                "FALLO: dorsal no actualizado (esperado " +
+                  updatedPayload.dorsal +
                   " recibido " +
-                  after.precio +
+                  after.dorsal +
                   ")"
               );
             }
-            if (Number(after.descuento) !== Number(updatedPayload.descuento)) {
+            if (Number(after.idUsuario) !== Number(updatedPayload.idUsuario)) {
               okUpdate = false;
-              log("FALLO: descuento no actualizado");
+              log("FALLO: idUsuario no actualizado");
             }
             if (okUpdate) log("OK: campos no FK actualizados correctamente");
 

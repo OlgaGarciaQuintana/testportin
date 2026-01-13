@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Pruebas API Artículo</title>
+    <title>Pruebas API Club</title>
     <style>
       :root {
         --bg: #f7f9fc;
@@ -99,9 +99,9 @@
   <body>
     <div class="wrap">
       <header>
-        <h1>Pruebas de la API: /articulo</h1>
+        <h1>Pruebas de la API: /api/clubs</h1>
         <div class="muted">
-          Este fichero realiza llamadas a los endpoints de Artículo y muestra
+          Este fichero realiza llamadas a los endpoints de Club y muestra
           comprobaciones básicas.
         </div>
       </header>
@@ -169,37 +169,25 @@
         <div class="card">
           <label>Create → Update (no FK) → Delete</label>
           <div class="muted">
-            Crea un artículo (usa idTipoarticulo=1 e idClub=1 por defecto), lo
+            Crea un club (usa idPresidente=1 e idVicepresidente=1 por defecto), lo
             actualiza (campos no FK) y luego lo borra.
           </div>
-          <div style="margin-top: 8px">
-            <label for="createDescripcion">Descripción</label>
+          <div style="margin-top: 8px" class="row">
             <input
-              id="createDescripcion"
-              placeholder="Descripción inicial"
-              value="Prueba API"
+              id="createNombre"
+              placeholder="Nombre del club"
+              value="Club Prueba API"
             />
           </div>
-          <div style="margin-top: 8px">
-            <label for="createPrecio">Precio</label>
-            <input id="createPrecio" type="number" step="0.01" value="10.00" />
+          <div style="margin-top: 8px" class="row">
+            <input id="createDireccion" placeholder="Dirección" value="Calle Principal 123" />
           </div>
-          <div style="margin-top: 8px">
-            <label for="createDescuento">Descuento</label>
-            <input
-              id="createDescuento"
-              type="number"
-              step="0.01"
-              value="0.00"
-            />
+          <div style="margin-top: 8px" class="row">
+            <input id="createTelefono" placeholder="Teléfono" value="961234567" />
           </div>
-          <div style="margin-top: 8px">
-            <label for="createIdTipo">idTipoarticulo</label>
-            <input id="createIdTipo" type="number" value="1" />
-          </div>
-          <div style="margin-top: 8px">
-            <label for="createIdClub">idClub</label>
-            <input id="createIdClub" type="number" value="1" />
+          <div style="margin-top: 8px" class="row">
+            <input id="createIdPresidente" type="number" value="1" placeholder="idPresidente" />
+            <input id="createIdVicepresidente" type="number" value="1" placeholder="idVicepresidente" />
           </div>
           <div style="margin-top: 8px">
             <button id="btnCreateUpdateDelete">
@@ -216,15 +204,14 @@
 
       <p class="muted" style="margin-top: 12px">
         Notas: Asume que el backend está disponible en la misma origen bajo
-        <code>/articulo</code>. Para <strong>create</strong> uso
-        idTipoarticulo=1 e idClub=1 por defecto — si esos FK no existen, la
+        <code>/api/clubs</code>. Para <strong>create</strong> uso
+        idPresidente=1 e idVicepresidente=1 por defecto — si esos FK no existen, la
         creación fallará.
       </p>
     </div>
 
     <script>
-      //const baseUrl = window.location.origin + "/articulo";
-      const baseUrl = "http://localhost:8089/articulo";
+      const baseUrl = "http://localhost:8089/api/clubs";
       const logEl = document.getElementById("log");
       function log(...args) {
         const t = args
@@ -246,9 +233,22 @@
           );
           const text = await res.text();
           let data = text && text.length ? JSON.parse(text) : null;
-          if (!res.ok) throw { status: res.status, body: data || text };
+          if (!res.ok) {
+            const errorInfo = {
+              status: res.status,
+              statusText: res.statusText,
+              body: data || text,
+              url: baseUrl + path,
+              method: options?.method || 'GET'
+            };
+            console.error('❌ ERROR EN API:', errorInfo);
+            throw errorInfo;
+          }
           return data;
         } catch (err) {
+          if (err instanceof TypeError && err.message.includes('fetch')) {
+            console.error('❌ ERROR DE RED:', err.message);
+          }
           throw err;
         }
       }
@@ -259,8 +259,8 @@
         .addEventListener("click", async () => {
           log("Iniciando fill/20...");
           try {
-            const filled = await api("/fill/20", { method: "GET" });
-            log("fill/20 response:", filled);
+            await api("/fill/20", { method: "GET" });
+            log("fill/20 ejecutado");
             const count = await api("/count", { method: "GET" });
             log("count after fill/20:", count);
             if (count === 20) log("OK: count == 20");
@@ -276,8 +276,8 @@
         .addEventListener("click", async () => {
           log("Iniciando empty...");
           try {
-            const emptied = await api("/empty", { method: "DELETE" });
-            log("empty response:", emptied);
+            await api("/empty", { method: "DELETE" });
+            log("empty ejecutado");
             const count = await api("/count", { method: "GET" });
             log("count after empty:", count);
             if (count === 0) log("OK: count == 0");
@@ -292,8 +292,8 @@
         .addEventListener("click", async () => {
           log("Iniciando fill/100...");
           try {
-            const filled = await api("/fill/100", { method: "GET" });
-            log("fill/100 response:", filled);
+            await api("/fill/100", { method: "GET" });
+            log("fill/100 ejecutado");
             const count = await api("/count", { method: "GET" });
             log("count after fill/100:", count);
           } catch (e) {
@@ -307,7 +307,7 @@
           log("Introduce un id válido");
           return;
         }
-        log("GET /articulo/" + id);
+        log("GET /api/clubs/" + id);
         try {
           const data = await api("/" + id, { method: "GET" });
           log("GET result:", data);
@@ -326,7 +326,7 @@
           const size = Number(document.getElementById("inputSize").value || 11);
           log(`GET page=${page} size=${size}`);
           try {
-            const data = await api(`?page=${page}&size=${size}`, {
+            const data = await api(`/page?page=${page}&size=${size}`, {
               method: "GET",
             });
             log("Page response meta:", {
@@ -351,7 +351,6 @@
                   size +
                   ")"
               );
-            // comprobación simple: ids ordenados ascendentemente
             const ids = content.map((c) => c.id).filter((x) => x != null);
             const sorted = [...ids].sort((a, b) => a - b);
             if (JSON.stringify(ids) === JSON.stringify(sorted))
@@ -367,30 +366,30 @@
         .addEventListener("click", async () => {
           try {
             // Crear
-            const descripcion =
-              document.getElementById("createDescripcion").value ||
-              "Prueba API";
-            const precio =
-              Number(document.getElementById("createPrecio").value) || 0;
-            const descuento =
-              Number(document.getElementById("createDescuento").value) || 0;
-            const idTipoarticulo =
-              Number(document.getElementById("createIdTipo").value) || 1;
-            const idClub =
-              Number(document.getElementById("createIdClub").value) || 1;
+            const nombre =
+              document.getElementById("createNombre").value ||
+              "Club Prueba API";
+            const direccion =
+              document.getElementById("createDireccion").value || "Calle Principal 123";
+            const telefono =
+              document.getElementById("createTelefono").value || "961234567";
+            const idPresidente =
+              Number(document.getElementById("createIdPresidente").value) || 1;
+            const idVicepresidente =
+              Number(document.getElementById("createIdVicepresidente").value) || 1;
             log(
-              "Iniciando CREATE con idTipoarticulo=" +
-                idTipoarticulo +
-                " idClub=" +
-                idClub
+              "Iniciando CREATE con idPresidente=" +
+                idPresidente +
+                " idVicepresidente=" +
+                idVicepresidente
             );
             const createPayload = {
-              descripcion,
-              precio,
-              descuento,
-              imagen: null,
-              idTipoarticulo,
-              idClub,
+              nombre,
+              direccion,
+              telefono,
+              idPresidente,
+              idVicepresidente,
+              imagen: btoa("imagen_test"),
             };
             const created = await api("", {
               method: "POST",
@@ -406,13 +405,12 @@
 
             // Update: cambiar campos no FK
             const updatedPayload = Object.assign({}, created, {
-              descripcion: descripcion + " - UPDATED",
-              precio: (Number(precio) + 1).toFixed(2),
-              descuento: Number(descuento) + 0.5,
-              imagen: null,
+              nombre: nombre + " - UPDATED",
+              direccion: direccion + " UPDATED",
+              telefono: "999999999",
             });
             log("Executing UPDATE for id=" + newId);
-            const updated = await api("", {
+            const updated = await api("/" + newId, {
               method: "PUT",
               body: JSON.stringify(updatedPayload),
             });
@@ -422,30 +420,24 @@
             const after = await api("/" + newId, { method: "GET" });
             log("GET after update:", after);
             let okUpdate = true;
-            if (after.descripcion !== updatedPayload.descripcion) {
+            if (after.nombre !== updatedPayload.nombre) {
               okUpdate = false;
-              log("FALLO: descripcion no actualizada");
+              log("FALLO: nombre no actualizado");
             }
-            if (Number(after.precio) !== Number(updatedPayload.precio)) {
+            if (after.direccion !== updatedPayload.direccion) {
               okUpdate = false;
-              log(
-                "FALLO: precio no actualizado (esperado " +
-                  updatedPayload.precio +
-                  " recibido " +
-                  after.precio +
-                  ")"
-              );
+              log("FALLO: direccion no actualizada");
             }
-            if (Number(after.descuento) !== Number(updatedPayload.descuento)) {
+            if (after.telefono !== updatedPayload.telefono) {
               okUpdate = false;
-              log("FALLO: descuento no actualizado");
+              log("FALLO: telefono no actualizado");
             }
             if (okUpdate) log("OK: campos no FK actualizados correctamente");
 
             // Delete
             log("Deleting id=" + newId);
-            const del = await api("/" + newId, { method: "DELETE" });
-            log("DELETE result:", del);
+            await api("/" + newId, { method: "DELETE" });
+            log("DELETE ejecutado");
             // Comprobar no existe
             try {
               await api("/" + newId, { method: "GET" });
